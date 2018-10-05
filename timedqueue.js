@@ -11,13 +11,19 @@ class Node {
 
 class TimedQueue extends EventEmitter {
   $check( ) {
-    // Recorremos la lista desde el final hasta el principio.
     var now = Date.now( ),
         iter = this.$back;
 
+    // Recorremos la lista desde el final hasta el principio.
+    iter = this.$back;
+
     while( ( iter !== false ) && ( iter.timeout < now ) ) {
       // Emitimos el evento.
-      this.emit( 'timeout', iter.value, iter.timeout, now );
+      if( iter.timeout ) {
+        this.emit( 'timeout', iter.value, iter.timeout, now );
+        iter.timeout = 0;
+      }
+
       iter = iter.prev;
     }
 
@@ -47,6 +53,18 @@ class TimedQueue extends EventEmitter {
         iter = iter.next;
       }
     }
+  }
+
+  force( node ) {
+    this.emit( 'timeout', node.value, iter.timeout, Date.now( ) );
+    this.dequeue( node );
+  }
+
+  clear( ) {
+    this.$front = false;
+    this.$back = false;
+    if( this.$intervalId ) clearInterval( this.$intervalId );
+    this.$intervalId = false;
   }
 
   constructor( interval, timeout ) {
