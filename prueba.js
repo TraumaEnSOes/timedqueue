@@ -1,17 +1,8 @@
 const TimedQueue = require( './timedqueue.js' );
 const UtilModule = require( 'util' );
 
-function inspect( ...args ) {
-  var curr,
-      idx = -1;
-
-  while( curr = args[++idx] ) process.stdout.write( UtilModule.inspect( curr, { depth: Infinity } ) );
-
-  process.stdout.write( '\n' );
-}
-
-function onTimeout( val, expected, real ) {
-  console.log( 'Timeout. value:', val, 'expected:', expected.toString( ).substr( -5 ), 'real:', real.toString( ).substr( -5 ) );
+function onTimeout( val, timeout, forced ) {
+  console.log( `value: ${val}, timeout: ${timeout}, forced: ${forced}` );
 }
 
 var queue = new TimedQueue( ),

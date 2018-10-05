@@ -18,7 +18,7 @@ class TimedQueue extends EventEmitter {
     while( ( iter !== null )  && ( iter.timeout < now ) ) {
       // Emitimos el evento.
       if( iter.timeout ) {
-        this.emit( 'timeout', iter.value, iter.timeout, now );
+        setTimeout( doEmit.bind( this, iter.value, iter.timeout ) );
         iter.timeout = 0;
       }
 
@@ -37,6 +37,8 @@ class TimedQueue extends EventEmitter {
       iter.next = null;
       this.$back = iter;
     }
+
+    function doEmit( val, to ) { this.emit( 'timeout', val, to, false ); }
   }
 
 //@ifdef TIMEQUEUE_DUMP
@@ -47,8 +49,7 @@ class TimedQueue extends EventEmitter {
       var iter = this.$front;
 
       while( iter !== null ) {
-        let text = iter.timeout.toString( ).substr( -5 );
-        console.log( `{ ${text}, ${iter.value} }` );
+        console.log( `{ ${iter.value}, ${iter.timeout} }` );
         iter = iter.next;
       }
     }
@@ -56,8 +57,11 @@ class TimedQueue extends EventEmitter {
 //@endif
 
   force( node ) {
-    this.emit( 'timeout', node.value, node.timeout, Date.now( ) );
     this.dequeue( node );
+    setInterval( doEmit.bind( this, node.value, node.timeout ) );
+    node.timeout = 0;
+
+    function doEmit( val, to ) { self.emit( 'timeout', val, to, true ); }
   }
 
   clear( ) {

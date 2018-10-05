@@ -3,12 +3,14 @@ Cola de valores, con avisos de tiempo expirado. Hereda de `EventEmitter`.
 
 ## Eventos
 
-### timeout( data, required, real )
-El tiempo de vida del valor `data` ha expirado. 
+### timeout( data, timeout, forced )
+El tiempo de vida del valor `data` ha expirado.
 
 `data`: el valor, tal y como se pasó al llamar a `TimedData::enqueue( )`.
 
-`required`: tiempo de vida que se le pasó 
+`timeout`: hora límite, que ya pasó.
+
+`forced`: boolean. Indica si se usó la función `force( )`.
 
 ## Funciones
 
@@ -37,6 +39,6 @@ Sacar un elemento de la cola.
 Vaciar la cola.
 
 ### TimedQueue::force( item )
-Fuerza la expiración de un elemento, sacándolo de la cola.
+Fuerza la expiración de un elemento, sacándolo de la cola y emitiendo el evento `timeout` const `forced === true`.
 
 `item`: elemento, tal y como lo devolvió `TimedQueue.enqueue( )`.
