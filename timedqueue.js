@@ -4,8 +4,8 @@ class Node {
   constructor( val, timeout ) {
     this.value = val;
     this.timeout = timeout;
-    this.prev = false;
-    this.next = false;
+    this.prev = null;
+    this.next = null;
   }
 };
 
@@ -15,9 +15,7 @@ class TimedQueue extends EventEmitter {
         iter = this.$back;
 
     // Recorremos la lista desde el final hasta el principio.
-    iter = this.$back;
-
-    while( ( iter !== false ) && ( iter.timeout < now ) ) {
+    while( ( iter !== null )  && ( iter.timeout < now ) ) {
       // Emitimos el evento.
       if( iter.timeout ) {
         this.emit( 'timeout', iter.value, iter.timeout, now );
@@ -27,63 +25,61 @@ class TimedQueue extends EventEmitter {
       iter = iter.prev;
     }
 
-    if( iter === false ) {
+    if( iter === null ) {
       // Si se cumple, la cola está vacía.
-      this.$front = false;
-      this.$back = false;
+      this.$front = null;
+      this.$back = null;
       clearInterval( this.$intervalId );
-      this.$intervalId = false;
+      this.$intervalId = null;
     } else {
       // Quedan mas elementos.
       // Cortamos la lista por aquí.
-      iter.next = false;
+      iter.next = null;
       this.$back = iter;
     }
   }
 
-  $dump( ) {
-    if( this.$front === false ) {
+//@ifdef TIMEQUEUE_DUMP
+  dump( ) {
+    if( this.$front === null ) {
       console.log( '{ EMPTY }' );
     } else {
       var iter = this.$front;
 
-      while( iter !== false ) {
+      while( iter !== null ) {
         let text = iter.timeout.toString( ).substr( -5 );
         console.log( `{ ${text}, ${iter.value} }` );
         iter = iter.next;
       }
     }
   }
+//@endif
 
   force( node ) {
-    this.emit( 'timeout', node.value, iter.timeout, Date.now( ) );
+    this.emit( 'timeout', node.value, node.timeout, Date.now( ) );
     this.dequeue( node );
   }
 
   clear( ) {
-    this.$front = false;
-    this.$back = false;
-    if( this.$intervalId ) clearInterval( this.$intervalId );
-    this.$intervalId = false;
+    this.$front = null;
+    this.$back = null;
+    if( this.$intervalId !== null ) {
+      clearInterval( this.$intervalId );
+      this.$intervalId = null;
+    }
   }
 
   constructor( interval, timeout ) {
+    interval = ( interval === undefined ) ? 250 : interval;
+    timeout = ( timeout === undefined ) ? 1000 : timeout;
+
     super( );
 
-    this.$interval = ( interval === undefined ) ? 250 : interval;
-    this.$timeout = ( timeout === undefined ) ? 5000 : timeout;
-    this.$front = false;
-    this.$back = false;
-    this.$intervalId = false;
-  }
-
-  clear( ) {
-    this.$front = false;
-    this.$back = false;
-    if( this.$intervalId !== false ) {
-      clearInterval( this.$intervalId );
-      this.$intervalId = false;
-    }
+    this.$interval = interval;
+    this.$timeout = timeout;
+    this.$front = null;
+    this.$back = null;
+    this.$intervalId = null;
   }
 
   enqueue( val, timeout ) {
@@ -91,7 +87,7 @@ class TimedQueue extends EventEmitter {
 
     var node = new Node( val, Date.now( ) + timeout );
 
-    if( this.$front === false ) {
+    if( this.$front === null ) {
       // Caso fácil. Cola vacía.
       this.$front = node;
       this.$back = node;
@@ -102,9 +98,9 @@ class TimedQueue extends EventEmitter {
       // buscando un nodo con un timeout menor que el nuestro.
       let iter = this.$back;
 
-      while( ( iter.prev !== false ) && ( iter.timeout > timeout ) )iter = iter.prev;
+      while( ( iter.prev !== null ) && ( iter.timeout > timeout ) )iter = iter.prev;
 
-      if( iter.prev === false ) {
+      if( iter.prev === null ) {
         // Hemos llegado al primer nodo.
         node.next = this.$front;
         this.$front.prev = node;
@@ -118,25 +114,24 @@ class TimedQueue extends EventEmitter {
       }
     }
 
-    if( this.$intervalId === false ) this.$intervalId = setInterval( this.$check.bind( this ), this.$interval );
     return node;
   }
 
-  dequeue( node ) {
+  dequeue( node )  {
     node.timeout = 0;
     if( this.$front === this.$back ) {
       // Caso fácil. Solo hay un elemento.
       clearInterval( this.$intervalId );
-      this.$front = false;
-      this.$next = false;
-      this.$intervalId = false;
+      this.$front = null;
+      this.$back = null;
+      this.$intervalId = null;
 
       return;
     }
 
     // Hay mas de un elemento.
-    if( node.prev !== false ) node.prev.next = node.next;
-    if( node.next !== false ) node.next.prev = node.prev;
+    if( node.prev !== null ) node.prev.next = node.next;
+    if( node.next !== null ) node.next.prev = node.prev;
 
     if( this.$front === node ) {
       this.$front = node.next;
