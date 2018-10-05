@@ -21,6 +21,6 @@ queue.on( 'timeout', onTimeout );
 
 for( let x = 0; x < 5; ++x ) idx[x] = queue.enqueue( x, x * 900 );
 
-// queue.dequeue( idx[3] );
+queue.dequeue( idx[3] );
 
-queue.$dump( );
+queue.dump( );
